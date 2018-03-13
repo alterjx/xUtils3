@@ -187,6 +187,7 @@ public final class ViewInjectorImpl implements ViewInjector {
                 Event event = method.getAnnotation(Event.class);
                 if (event != null) {
                     try {
+
                         // id参数
                         int[] values = event.value();
                         int[] parentIds = event.parentId();
@@ -210,5 +211,4 @@ public final class ViewInjectorImpl implements ViewInjector {
         } // end inject event
 
     }
-
 }

@@ -15,11 +15,16 @@
 
 package org.xutils.view;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Toast;
 
 import org.xutils.common.util.DoubleKeyValueMap;
 import org.xutils.common.util.LogUtil;
+import org.xutils.view.annotation.CheckNetwork;
 import org.xutils.view.annotation.Event;
 
 import java.lang.ref.WeakReference;
@@ -123,6 +128,7 @@ import java.util.Map;
         }
     }
 
+
     public static class DynamicHandler implements InvocationHandler {
         // 存放代理对象，比如Fragment或view holder
         private WeakReference<Object> handlerRef;
@@ -175,6 +181,9 @@ import java.util.Map;
                     }
 
                     try {
+                        if (!TestNetwork(handler, method)) {
+                            return null;
+                        }
                         return method.invoke(handler, args);
                     } catch (Throwable ex) {
                         throw new RuntimeException("invoke method error:" +
@@ -186,5 +195,42 @@ import java.util.Map;
             }
             return null;
         }
+    }
+
+    /**
+     * 检查是否联网
+     *
+     * @param context
+     * @return
+     */
+    private static boolean checkNetwork(Context context) {
+        try {
+            ConnectivityManager connectivityManager = (ConnectivityManager) context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetworkInfo = connectivityManager
+                    .getActiveNetworkInfo();
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    private static boolean TestNetwork(Object handler, Method method) {
+        /**
+         * 新加功能
+         */
+        if (handler instanceof Context) {
+            Context context = (Context) handler;
+            if (method.getAnnotation(CheckNetwork.class) != null && !checkNetwork(context)) {
+                Toast.makeText(context, "您未联网", Toast.LENGTH_LONG).show();
+                return false;
+
+            }
+        }
+        return true;
     }
 }
